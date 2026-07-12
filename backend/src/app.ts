@@ -5,6 +5,8 @@ import { requestLogger } from './middleware/requestLogger.js';
 import { errorHandler } from './middleware/errorHandler.js';
 import { notFoundHandler } from './middleware/notFoundHandler.js';
 import authRoutes from './routes/auth.routes.js';
+import documentRoutes from './routes/document.routes.js';
+
 
 export function createApp() {
   const app = express();
@@ -18,6 +20,8 @@ export function createApp() {
   });
 
   app.use('/api/auth', authRoutes);
+  app.use('/api/documents', documentRoutes);
+
 
   // Route mounts to add as later phases build them out:
   // app.use('/api/documents', documentRoutes);
