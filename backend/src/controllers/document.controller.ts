@@ -2,6 +2,7 @@ import type { Request, Response } from 'express';
 import { StatusCodes } from 'http-status-codes';
 import * as documentService from '../services/document.services.js';
 
+
 function serializeDocument(doc: any) {
   return {
     id: doc._id,
@@ -39,4 +40,10 @@ export async function deleteDocumentController(req: Request, res: Response) {
 export async function shareDocumentController(req: Request, res: Response) {
   const doc = await documentService.shareDocument(req.params.id as string, req.userId!, req.body);
   res.status(StatusCodes.OK).json({ document: serializeDocument(doc) });
+}
+
+export async function getDocumentBlameController(req: Request, res: Response) {
+  const field = typeof req.query.field === 'string' ? req.query.field : 'content';
+  const blame = await documentService.getDocumentBlame(req.params.id as string, req.userId!, field);
+  res.status(StatusCodes.OK).json({ blame });
 }

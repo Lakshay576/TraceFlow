@@ -3,6 +3,16 @@ import type { DocumentDoc } from '../models/document.js';
 import { User } from '../models/user.js';
 import { NotFoundError, ForbiddenError } from '../errors/index.js';
 import type { CreateDocumentInput, ShareDocumentInput } from '../validators/document.schema.js';
+import { getOrLoadDoc, getClientAttributions } from '../socket/yjsDocManager.js';
+import { getTextBlame, resolveBlameWithUsers } from './blame.service.js';
+
+export interface BlameResultEntry {
+  text: string;
+  startIndex: number;
+  endIndex: number;
+  author: { id: string; name: string; email: string } | null;
+}
+
 
 export async function createDocument(
   ownerId: string,
@@ -101,4 +111,35 @@ export async function shareDocument(
 
   await doc.save();
   return doc;
+}
+
+export async function getDocumentBlame(
+  documentId: string,
+  userId: string,
+  field: string = 'content'
+): Promise<BlameResultEntry[]> {
+  const doc = await getDocumentForUser(documentId, userId);
+  if (!canAccessDocument(doc, userId, 'viewer')) {
+    throw new ForbiddenError('You do not have access to view this document');
+  }
+
+  const yDoc = await getOrLoadDoc(documentId);
+  const ytext = yDoc.getText(field);
+  const segments = getTextBlame(ytext);
+  const attributions = getClientAttributions(documentId) ?? new Map<number, string>();
+  const resolvedSegments = resolveBlameWithUsers(segments, attributions);
+
+  const uniqueUserIds = [...new Set(resolvedSegments.map((s) => s.userId).filter(Boolean))] as string[];
+  const users = await User.find({ _id: { $in: uniqueUserIds } }).select('name email');
+  const userMap = new Map(users.map((u) => [u._id.toString(), u]));
+
+  return resolvedSegments.map((segment) => {
+    const user = segment.userId ? userMap.get(segment.userId) : null;
+    return {
+      text: segment.text,
+      startIndex: segment.startIndex,
+      endIndex: segment.endIndex,
+      author: user ? { id: user._id.toString(), name: user.name, email: user.email } : null,
+    };
+  });
 }

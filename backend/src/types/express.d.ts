@@ -26,5 +26,15 @@ declare module 'socket.io' {
   interface SocketData {
     userId: string;
     email: string;
+    currentDocumentId?: string;
+    // Tracks which Yjs Awareness client IDs this socket "owns", so they
+    // can be cleaned up on disconnect. Awareness client IDs are generated
+    // independently by each client's own Y.Doc — they are NOT the same
+    // as socket.id, so we can't clean up by socket.id alone.
+    awarenessClientIds?: Set<number>;
+    // Reference to the per-socket ownership-tracking listener, so it can
+    // be unregistered on disconnect (otherwise it leaks — the listener
+    // stays attached to the shared Awareness instance forever).
+    awarenessCleanup?: () => void;
   }
 }

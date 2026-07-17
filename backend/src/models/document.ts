@@ -1,6 +1,8 @@
 import { Schema, model } from 'mongoose';
 import type { Document as MongooseDocument, InferSchemaType, Types } from 'mongoose';
 
+export type DocumentStatus = 'draft' | 'in_review' | 'approved' | 'archived';
+
 const collaboratorSchema = new Schema(
   {
     userId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
@@ -21,11 +23,33 @@ const documentSchema = new Schema(
       enum: ['draft', 'in_review', 'approved', 'archived'],
       default: 'draft',
     },
+    statusHistory: {
+  type: [
+    {
+      from: { type: String, required: true },
+      to: { type: String, required: true },
+      byUserId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+      at: { type: Date, default: Date.now },
+      _id: false,
+    },
+  ],
+  default: [],
+},
     collaborators: { type: [collaboratorSchema], default: [] },
     // Serialized Yjs document state — populated starting in Phase 3.
     // Buffer, not JSON: Yjs's binary encoding preserves CRDT metadata
     // (client IDs, causal ordering) that JSON can't represent losslessly.
     yjsState: { type: Buffer, default: null },
+    clientAttributions: {
+  type: [
+    {
+      clientId: { type: Number, required: true },
+      userId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+      _id: false,
+    },
+  ],
+  default: [],
+},
   },
   { timestamps: true }
 );
