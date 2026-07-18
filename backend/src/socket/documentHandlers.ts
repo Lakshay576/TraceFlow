@@ -5,6 +5,7 @@ import { getDocumentForUser } from '../services/document.services.js';
 import { canAccessDocument } from '../models/document.js';
 import { getOrLoadDoc, schedulePersist, evictIfIdle, recordClientAttribution } from './yjsDocManager.js';
 import { attachAwareness, detachAwareness } from './awarenessHandlers.js';
+import { logDocumentUpdate } from '../services/history.service.js';
 
 export function roomName(documentId: string) {
   return `doc:${documentId}`;
@@ -94,6 +95,10 @@ export function registerDocumentHandlers(io: Server, socket: Socket) {
       socket.to(roomName(documentId)).emit('yjs-update', { update });
 
       schedulePersist(documentId);
+      
+      logDocumentUpdate(documentId, socket.data.userId, updateBytes).catch((err) => {
+        logger.error({ err, documentId }, '[history] failed to log update');
+      });
     })
   );
 

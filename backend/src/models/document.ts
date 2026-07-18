@@ -40,6 +40,7 @@ const documentSchema = new Schema(
     // Buffer, not JSON: Yjs's binary encoding preserves CRDT metadata
     // (client IDs, causal ordering) that JSON can't represent losslessly.
     yjsState: { type: Buffer, default: null },
+    updateSeqCounter: { type: Number, default: 0 },
     clientAttributions: {
   type: [
     {

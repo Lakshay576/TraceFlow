@@ -21,6 +21,7 @@ import {
   transitionDocumentController,
   getAllowedTransitionsController,
 } from '../controllers/workflow.controller.js';
+import historyRoutes from './history.routes.js';
 
 const router = Router();
 
@@ -45,5 +46,7 @@ router.patch(
   validate(transitionDocumentSchema),
   asyncHandler(transitionDocumentController)
 );
+
+router.use('/:id/history', historyRoutes);
 
 export default router;
