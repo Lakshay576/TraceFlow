@@ -1,7 +1,6 @@
 import * as Y from 'yjs';
 import { DocumentModel, canAccessDocument } from '../models/document.js';
-import { SnapshotModel } from '../models/Snapshot.js';
-import type { SnapshotDoc } from '../models/Snapshot.js';
+import { SnapshotModel, type SnapshotDoc } from '../models/Snapshot.js';
 import { getOrLoadDoc } from '../socket/yjsDocManager.js';
 import { getDocumentForUser } from './document.services.js';
 import { ForbiddenError, NotFoundError } from '../errors/index.js';
@@ -30,6 +29,24 @@ export async function createSnapshot(
     atSeq: docRecord.updateSeqCounter,
     yjsState: Buffer.from(state),
     label: label ?? null,
+  });
+}
+
+export async function createSystemSnapshot(documentId: string): Promise<SnapshotDoc> {
+  const [yDoc, docRecord] = await Promise.all([
+    getOrLoadDoc(documentId),
+    DocumentModel.findById(documentId).select('updateSeqCounter'),
+  ]);
+
+  if (!docRecord) throw new NotFoundError('Document not found');
+
+  const state = Y.encodeStateAsUpdate(yDoc);
+
+  return SnapshotModel.create({
+    documentId,
+    atSeq: docRecord.updateSeqCounter,
+    yjsState: Buffer.from(state),
+    label: 'Automatic snapshot',
   });
 }
 

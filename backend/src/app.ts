@@ -6,14 +6,18 @@ import { errorHandler } from './middleware/errorHandler.js';
 import { notFoundHandler } from './middleware/notFoundHandler.js';
 import authRoutes from './routes/auth.routes.js';
 import documentRoutes from './routes/document.routes.js';
+import helmet from 'helmet';
+import { generalRateLimiter } from './middleware/rateLimiter.js';
 
 
 export function createApp() {
   const app = express();
 
   app.use(requestLogger);
+  app.use(helmet());
   app.use(cors({ origin: env.clientOrigin, credentials: true }));
   app.use(express.json());
+  app.use(generalRateLimiter);
 
   app.get('/health', (_req, res) => {
     res.json({ status: 'ok', env: env.nodeEnv });
