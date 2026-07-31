@@ -6,10 +6,10 @@ import { DocumentStatus } from '../../lib/api/documents';
 import { ApiError } from '../../lib/api/client ';
 
 const STATUS_STYLES: Record<DocumentStatus, string> = {
-  draft: 'bg-gray-100 text-gray-700',
-  in_review: 'bg-amber-100 text-amber-700',
-  approved: 'bg-green-100 text-green-700',
-  archived: 'bg-red-100 text-red-700',
+  draft: 'bg-slate-100 text-slate-600 ring-1 ring-slate-200',
+  in_review: 'bg-amber-50 text-amber-700 ring-1 ring-amber-200',
+  approved: 'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200',
+  archived: 'bg-rose-50 text-rose-700 ring-1 ring-rose-200',
 };
 
 const STATUS_LABELS: Record<DocumentStatus, string> = {
@@ -25,13 +25,6 @@ interface WorkflowControlsProps {
   onStatusChange?: (status: DocumentStatus) => void;
 }
 
-/**
- * Deliberately fetches the allowed-next-states from the backend's
- * transition table rather than hardcoding a duplicate copy of the same
- * rules here. If the backend's workflow.service.ts transition table ever
- * changes, this UI automatically reflects it with zero frontend changes —
- * the single source of truth stays on the server.
- */
 export function WorkflowControls({ documentId, initialStatus, onStatusChange }: WorkflowControlsProps) {
   const [status, setStatus] = useState<DocumentStatus>(initialStatus);
   const [allowedTransitions, setAllowedTransitions] = useState<DocumentStatus[]>([]);
@@ -70,24 +63,33 @@ export function WorkflowControls({ documentId, initialStatus, onStatusChange }: 
     }
   }
 
-  return (
-    <div className="flex items-center gap-2">
-      <span className={`rounded px-2 py-1 text-xs font-medium ${STATUS_STYLES[status]}`}>
+return (
+    <div className="flex items-center gap-2.5">
+      <span className={`rounded-full px-3 py-1 text-xs font-semibold ${STATUS_STYLES[status]}`}>
         {STATUS_LABELS[status]}
       </span>
+
+      <div className="h-4 w-px bg-slate-200" />
 
       {allowedTransitions.map((target) => (
         <button
           key={target}
           onClick={() => handleTransition(target)}
           disabled={isTransitioning}
-          className="rounded-md border border-gray-300 px-2.5 py-1 text-xs text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+          className="flex items-center gap-1.5 rounded-lg border border-slate-200 px-2.5 py-1.5 text-xs font-medium text-slate-600 transition hover:border-slate-300 hover:bg-slate-50 disabled:opacity-50"
         >
+          {isTransitioning && (
+            <span className="h-3 w-3 animate-spin rounded-full border-2 border-slate-300 border-t-indigo-600" />
+          )}
           {target === 'draft' && status === 'archived' ? 'Reopen' : `Move to ${STATUS_LABELS[target]}`}
         </button>
       ))}
 
-      {error && <span className="text-xs text-red-600">{error}</span>}
+      {error && (
+        <span className="flex items-center gap-1 rounded-full bg-rose-50 px-2.5 py-1 text-xs font-medium text-rose-600">
+          {error}
+        </span>
+      )}
     </div>
   );
 }

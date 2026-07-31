@@ -9,14 +9,6 @@ interface ReplayScrubberProps {
   onClose: () => void;
 }
 
-/**
- * This is the feature that only exists because CollabDocs chose a CRDT
- * (Yjs) over Operational Transformation: every edit is a self-contained,
- * order-independent update, so "reconstruct the document as it looked
- * at any past point" requires no special infrastructure beyond storing
- * the update log and replaying it — which is exactly what
- * replay.service.ts's reconstructAtSeq() does on the backend.
- */
 export function ReplayScrubber({ documentId, onClose }: ReplayScrubberProps) {
   const [frames, setFrames] = useState<HistoryFrame[]>([]);
   const [seqIndex, setSeqIndex] = useState(0);
@@ -57,22 +49,34 @@ export function ReplayScrubber({ documentId, onClose }: ReplayScrubberProps) {
 
   const currentFrame = frames[seqIndex];
 
-  return (
-    <div className="fixed inset-0 flex items-center justify-center bg-black/30 px-4">
-      <div className="flex max-h-[85vh] w-full max-w-2xl flex-col rounded-lg bg-white shadow-lg">
-        <div className="flex items-center justify-between border-b border-gray-100 px-5 py-3">
-          <h3 className="text-sm font-semibold text-gray-900">Version history</h3>
-          <button onClick={onClose} className="text-sm text-gray-400 hover:text-gray-600">
+ return (
+    <div className="fixed inset-0 z-20 flex items-center justify-center bg-slate-900/40 px-4 backdrop-blur-sm">
+      <div className="flex max-h-[85vh] w-full max-w-2xl flex-col rounded-2xl bg-white shadow-2xl ring-1 ring-slate-200">
+        <div className="flex items-center justify-between border-b border-slate-100 px-6 py-4">
+          <h3 className="text-lg font-semibold text-slate-900">Version history</h3>
+          <button
+            onClick={onClose}
+            className="rounded-md p-1 text-slate-400 transition hover:bg-slate-100 hover:text-slate-600"
+          >
             ✕
           </button>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-5">
-          {isLoadingFrames && <p className="text-sm text-gray-400">Loading history…</p>}
-          {error && <p className="text-sm text-red-600">{error}</p>}
+        <div className="flex-1 overflow-y-auto p-6">
+          {isLoadingFrames && (
+            <div className="flex items-center gap-2.5 text-sm text-slate-400">
+              <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-slate-300 border-t-indigo-600" />
+              Loading history…
+            </div>
+          )}
+          {error && (
+            <div className="rounded-lg bg-rose-50 px-3 py-2 text-sm text-rose-600 ring-1 ring-rose-100">
+              {error}
+            </div>
+          )}
 
           {!isLoadingFrames && frames.length === 0 && !error && (
-            <p className="text-sm text-gray-400">No edit history recorded for this document yet.</p>
+            <p className="text-sm text-slate-400">No edit history recorded for this document yet.</p>
           )}
 
           {frames.length > 0 && (
@@ -83,11 +87,11 @@ export function ReplayScrubber({ documentId, onClose }: ReplayScrubberProps) {
                 max={frames.length - 1}
                 value={seqIndex}
                 onChange={(e) => setSeqIndex(Number(e.target.value))}
-                className="w-full"
+                className="h-1.5 w-full cursor-pointer appearance-none rounded-full bg-slate-200 accent-indigo-600"
               />
-              <div className="mt-1 flex justify-between text-xs text-gray-400">
+              <div className="mt-2 flex justify-between text-xs text-slate-400">
                 <span>Start</span>
-                <span>
+                <span className="font-medium text-slate-500">
                   Edit {seqIndex + 1} of {frames.length}
                   {currentFrame && ` · ${new Date(currentFrame.createdAt).toLocaleString()}`}
                 </span>
@@ -95,8 +99,8 @@ export function ReplayScrubber({ documentId, onClose }: ReplayScrubberProps) {
               </div>
 
               <pre
-                className={`mt-4 whitespace-pre-wrap rounded-md border border-gray-100 bg-gray-50 p-3 font-mono text-sm leading-relaxed ${
-                  isLoadingText ? 'opacity-50' : ''
+                className={`mt-4 whitespace-pre-wrap rounded-xl border border-slate-200 bg-slate-50 p-4 font-mono text-sm leading-relaxed text-slate-800 transition-opacity ${
+                  isLoadingText ? 'opacity-40' : ''
                 }`}
               >
                 {text}

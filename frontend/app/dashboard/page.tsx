@@ -15,10 +15,10 @@ import {
 import { ApiError } from '../../lib/api/client ';
 
 const STATUS_STYLES: Record<string, string> = {
-  draft: 'bg-gray-100 text-gray-700',
-  in_review: 'bg-amber-100 text-amber-700',
-  approved: 'bg-green-100 text-green-700',
-  archived: 'bg-red-100 text-red-700',
+  draft: 'bg-slate-100 text-slate-600 ring-1 ring-slate-200',
+  in_review: 'bg-amber-50 text-amber-700 ring-1 ring-amber-200',
+  approved: 'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200',
+  archived: 'bg-rose-50 text-rose-700 ring-1 ring-rose-200',
 };
 
 export default function DashboardPage() {
@@ -38,6 +38,8 @@ export default function DashboardPage() {
   const [shareEmail, setShareEmail] = useState('');
   const [shareRole, setShareRole] = useState<'viewer' | 'editor'>('editor');
   const [isSharing, setIsSharing] = useState(false);
+
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
   async function refreshDocuments() {
     setIsLoadingDocs(true);
@@ -70,6 +72,7 @@ export default function DashboardPage() {
     try {
       await createDocument(newTitle, newType, newType === 'code' ? newLanguage : undefined);
       setNewTitle('');
+      setIsCreateModalOpen(false);
       await refreshDocuments();
     } catch (err) {
       setError(err instanceof ApiError ? err.message : 'Failed to create document');
@@ -116,102 +119,98 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <header className="flex items-center justify-between border-b border-gray-200 bg-white px-6 py-4">
-        <h1 className="text-lg font-semibold text-gray-900">CollabDocs</h1>
-        <div className="flex items-center gap-4">
-          <span className="text-sm text-gray-600">{user?.name}</span>
-          <button
-            onClick={handleLogout}
-            className="rounded-md border border-gray-300 px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-50"
-          >
-            Log out
-          </button>
+    <div className="min-h-screen bg-slate-50">
+      <header className="sticky top-0 z-10 border-b border-slate-200/70 bg-white/80 backdrop-blur-md">
+        <div className="mx-auto flex max-w-5xl items-center justify-between px-6 py-4">
+          <div className="flex items-center gap-2.5">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-indigo-600 to-blue-500 text-sm font-bold text-white shadow-sm">
+              TF
+            </div>
+            <h1 className="text-lg font-semibold tracking-tight text-slate-900">TraceFlow</h1>
+          </div>
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2">
+              <div className="flex h-7 w-7 items-center justify-center rounded-full bg-slate-900 text-xs font-medium text-white">
+                {user?.name?.charAt(0)?.toUpperCase() ?? '?'}
+              </div>
+              <span className="text-sm text-slate-600">{user?.name}</span>
+            </div>
+            <button
+              onClick={handleLogout}
+              className="rounded-lg border border-slate-200 px-3 py-1.5 text-sm text-slate-600 transition hover:border-slate-300 hover:bg-slate-50"
+            >
+              Log out
+            </button>
+          </div>
         </div>
       </header>
 
-      <main className="mx-auto max-w-4xl px-6 py-10">
+      <main className="mx-auto max-w-5xl px-6 py-10">
         {error && (
-          <div className="mb-4 rounded-md bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div>
+          <div className="mb-6 flex items-center gap-2 rounded-xl bg-rose-50 px-4 py-3 text-sm text-rose-700 ring-1 ring-rose-100">
+            <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-rose-500" />
+            {error}
+          </div>
         )}
 
-        <form onSubmit={handleCreate} className="mb-8 rounded-lg border border-gray-200 bg-white p-4">
-          <h2 className="mb-3 text-sm font-medium text-gray-900">New document</h2>
-          <div className="flex flex-wrap gap-3">
-            <input
-              type="text"
-              value={newTitle}
-              onChange={(e) => setNewTitle(e.target.value)}
-              placeholder="Document title"
-              className="flex-1 min-w-[200px] rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-            />
-            <select
-              value={newType}
-              onChange={(e) => setNewType(e.target.value as DocumentType)}
-              className="rounded-md border border-gray-300 px-3 py-2 text-sm"
-            >
-              <option value="text">Text</option>
-              <option value="code">Code</option>
-            </select>
-            {newType === 'code' && (
-              <select
-                value={newLanguage}
-                onChange={(e) => setNewLanguage(e.target.value)}
-                className="rounded-md border border-gray-300 px-3 py-2 text-sm"
-              >
-                <option value="javascript">JavaScript</option>
-                <option value="typescript">TypeScript</option>
-                <option value="python">Python</option>
-              </select>
-            )}
-            <button
-              type="submit"
-              disabled={isCreating || !newTitle.trim()}
-              className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
-            >
-              {isCreating ? 'Creating…' : 'Create'}
-            </button>
-          </div>
-        </form>
+        <div className="mb-8 flex items-center justify-between">
+          <h2 className="text-lg font-semibold tracking-tight text-slate-900">Documents</h2>
+          <button
+            onClick={() => setIsCreateModalOpen(true)}
+            className="flex items-center gap-2 rounded-lg bg-gradient-to-r from-indigo-600 to-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:from-indigo-500 hover:to-blue-500"
+          >
+            <span className="text-base leading-none">+</span>
+            New document
+          </button>
+        </div>
 
         {isLoadingDocs ? (
-          <p className="text-sm text-gray-500">Loading documents…</p>
+          <div className="space-y-3">
+            {[...Array(3)].map((_, i) => (
+              <div key={i} className="h-16 animate-pulse rounded-xl bg-white ring-1 ring-slate-100" />
+            ))}
+          </div>
         ) : documents.length === 0 ? (
-          <p className="text-sm text-gray-500">No documents yet — create one above to get started.</p>
+          <div className="rounded-2xl border border-dashed border-slate-300 bg-white/50 px-6 py-14 text-center">
+            <p className="text-sm text-slate-500">No documents yet — create one above to get started.</p>
+          </div>
         ) : (
-          <ul className="divide-y divide-gray-200 rounded-lg border border-gray-200 bg-white">
+          <ul className="space-y-2">
             {documents.map((doc) => (
-              <li key={doc.id} className="flex items-center justify-between px-4 py-3">
+              <li
+                key={doc.id}
+                className="group flex items-center justify-between rounded-xl border border-slate-200 bg-white px-4 py-3.5 transition hover:border-slate-300 hover:shadow-sm"
+              >
                 <div className="min-w-0 flex-1">
                   <button
                     onClick={() => router.push(`/documents/${doc.id}`)}
-                    className="truncate text-sm font-medium text-gray-900 hover:text-blue-600"
+                    className="truncate text-sm font-medium text-slate-900 transition group-hover:text-indigo-600"
                   >
                     {doc.title}
                   </button>
-                  <div className="mt-1 flex items-center gap-2">
-                    <span className="text-xs text-gray-400">
+                  <div className="mt-1.5 flex items-center gap-2">
+                    <span className="text-xs text-slate-400">
                       {doc.type === 'code' ? `Code · ${doc.language}` : 'Text'}
                     </span>
                     <span
-                      className={`rounded px-1.5 py-0.5 text-xs font-medium ${STATUS_STYLES[doc.status] ?? ''}`}
+                      className={`rounded-full px-2 py-0.5 text-xs font-medium ${STATUS_STYLES[doc.status] ?? ''}`}
                     >
                       {doc.status.replace('_', ' ')}
                     </span>
                   </div>
                 </div>
 
-                <div className="flex shrink-0 items-center gap-2">
+                <div className="flex shrink-0 items-center gap-2 opacity-0 transition group-hover:opacity-100">
                   <button
                     onClick={() => setShareTargetId(doc.id)}
-                    className="rounded-md border border-gray-300 px-2.5 py-1 text-xs text-gray-700 hover:bg-gray-50"
+                    className="rounded-lg border border-slate-200 px-2.5 py-1 text-xs font-medium text-slate-600 transition hover:border-slate-300 hover:bg-slate-50"
                   >
                     Share
                   </button>
                   {doc.ownerId === user?.id && (
                     <button
                       onClick={() => handleDelete(doc.id)}
-                      className="rounded-md border border-red-200 px-2.5 py-1 text-xs text-red-600 hover:bg-red-50"
+                      className="rounded-lg border border-rose-200 px-2.5 py-1 text-xs font-medium text-rose-600 transition hover:bg-rose-50"
                     >
                       Delete
                     </button>
@@ -223,41 +222,235 @@ export default function DashboardPage() {
         )}
       </main>
 
-      {shareTargetId && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black/30 px-4">
-          <div className="w-full max-w-sm rounded-lg bg-white p-5 shadow-lg">
-            <h3 className="mb-3 text-sm font-semibold text-gray-900">Share document</h3>
-            <form onSubmit={handleShare} className="space-y-3">
-              <input
-                type="email"
-                required
-                value={shareEmail}
-                onChange={(e) => setShareEmail(e.target.value)}
-                placeholder="collaborator@example.com"
-                className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-              />
-              <select
-                value={shareRole}
-                onChange={(e) => setShareRole(e.target.value as 'viewer' | 'editor')}
-                className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
+     {shareTargetId && (
+        <div className="fixed inset-0 z-20 flex items-center justify-center bg-slate-900/40 px-4 backdrop-blur-sm">
+          <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl ring-1 ring-slate-200">
+            <div className="mb-1 flex items-center justify-between">
+              <h3 className="text-lg font-semibold text-slate-900">Share document</h3>
+              <button
+                onClick={() => setShareTargetId(null)}
+                className="rounded-md p-1 text-slate-400 transition hover:bg-slate-100 hover:text-slate-600"
               >
-                <option value="editor">Editor</option>
-                <option value="viewer">Viewer</option>
-              </select>
+                ✕
+              </button>
+            </div>
+            <p className="mb-5 text-sm leading-relaxed text-slate-500">
+              Invite someone to collaborate on this document. They'll get access based on the
+              role you choose below.
+            </p>
+
+            <form onSubmit={handleShare} className="space-y-5">
+              <div>
+                <label className="mb-2 block text-sm font-semibold text-slate-900">Email</label>
+                <input
+                  type="email"
+                  autoFocus
+                  required
+                  value={shareEmail}
+                  onChange={(e) => setShareEmail(e.target.value)}
+                  placeholder="collaborator@example.com"
+                  className="w-full rounded-lg border border-slate-300 bg-white px-3.5 py-2.5 text-sm text-slate-900 placeholder-slate-400 transition focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+                />
+              </div>
+
+              <div>
+                <label className="mb-2 block text-sm font-semibold text-slate-900">Role</label>
+                <div className="grid grid-cols-2 gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setShareRole('editor')}
+                    className={`flex items-center gap-2.5 rounded-lg border px-3.5 py-2.5 text-sm transition ${
+                      shareRole === 'editor'
+                        ? 'border-indigo-500 bg-indigo-50 text-slate-900'
+                        : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300'
+                    }`}
+                  >
+                    <span
+                      className={`flex h-3.5 w-3.5 items-center justify-center rounded-full border ${
+                        shareRole === 'editor' ? 'border-indigo-500' : 'border-slate-300'
+                      }`}
+                    >
+                      {shareRole === 'editor' && <span className="h-1.5 w-1.5 rounded-full bg-indigo-500" />}
+                    </span>
+                    Editor
+                    <span className="ml-auto">✏️</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setShareRole('viewer')}
+                    className={`flex items-center gap-2.5 rounded-lg border px-3.5 py-2.5 text-sm transition ${
+                      shareRole === 'viewer'
+                        ? 'border-indigo-500 bg-indigo-50 text-slate-900'
+                        : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300'
+                    }`}
+                  >
+                    <span
+                      className={`flex h-3.5 w-3.5 items-center justify-center rounded-full border ${
+                        shareRole === 'viewer' ? 'border-indigo-500' : 'border-slate-300'
+                      }`}
+                    >
+                      {shareRole === 'viewer' && <span className="h-1.5 w-1.5 rounded-full bg-indigo-500" />}
+                    </span>
+                    Viewer
+                    <span className="ml-auto">👁️</span>
+                  </button>
+                </div>
+                <p className="mt-2 text-xs leading-relaxed text-slate-400">
+                  Editors can make changes to the document. Viewers can only read it.
+                </p>
+              </div>
+
+              {error && (
+                <div className="rounded-lg bg-rose-50 px-3 py-2 text-sm text-rose-600 ring-1 ring-rose-100">
+                  {error}
+                </div>
+              )}
+
               <div className="flex justify-end gap-2 pt-1">
                 <button
                   type="button"
                   onClick={() => setShareTargetId(null)}
-                  className="rounded-md border border-gray-300 px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-50"
+                  className="rounded-lg border border-slate-200 px-4 py-2.5 text-sm font-medium text-slate-600 transition hover:bg-slate-50"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={isSharing}
-                  className="rounded-md bg-blue-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+                  className="flex items-center gap-2 rounded-lg bg-gradient-to-r from-indigo-600 to-blue-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:from-indigo-500 hover:to-blue-500 disabled:opacity-40"
                 >
+                  {isSharing && (
+                    <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+                  )}
                   {isSharing ? 'Sharing…' : 'Share'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+      {isCreateModalOpen && (
+        <div className="fixed inset-0 z-20 flex items-center justify-center bg-slate-900/40 px-4 backdrop-blur-sm">
+          <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl ring-1 ring-slate-200">
+            <div className="mb-1 flex items-center justify-between">
+              <h3 className="text-lg font-semibold text-slate-900">Create document</h3>
+              <button
+                onClick={() => setIsCreateModalOpen(false)}
+                className="rounded-md p-1 text-slate-400 transition hover:bg-slate-100 hover:text-slate-600"
+              >
+                ✕
+              </button>
+            </div>
+            <p className="mb-5 text-sm leading-relaxed text-slate-500">
+              Your document will hold content, collaborators, and version history. Everything
+              you need to get started in TraceFlow.
+            </p>
+
+            <form onSubmit={handleCreate} className="space-y-5">
+              <div>
+                <label className="mb-2 block text-sm font-semibold text-slate-900">Name</label>
+                <input
+                  type="text"
+                  autoFocus
+                  value={newTitle}
+                  onChange={(e) => setNewTitle(e.target.value)}
+                  placeholder="Name your document..."
+                  className="w-full rounded-lg border border-slate-300 bg-white px-3.5 py-2.5 text-sm text-slate-900 placeholder-slate-400 transition focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+                />
+              </div>
+
+              <div>
+                <label className="mb-2 block text-sm font-semibold text-slate-900">Type</label>
+                <div className="grid grid-cols-2 gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setNewType('text')}
+                    className={`flex items-center gap-2.5 rounded-lg border px-3.5 py-2.5 text-sm transition ${
+                      newType === 'text'
+                        ? 'border-indigo-500 bg-indigo-50 text-slate-900'
+                        : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300'
+                    }`}
+                  >
+                    <span
+                      className={`flex h-3.5 w-3.5 items-center justify-center rounded-full border ${
+                        newType === 'text' ? 'border-indigo-500' : 'border-slate-300'
+                      }`}
+                    >
+                      {newType === 'text' && <span className="h-1.5 w-1.5 rounded-full bg-indigo-500" />}
+                    </span>
+                    Text
+                    <span className="ml-auto">📄</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setNewType('code')}
+                    className={`flex items-center gap-2.5 rounded-lg border px-3.5 py-2.5 text-sm transition ${
+                      newType === 'code'
+                        ? 'border-indigo-500 bg-indigo-50 text-slate-900'
+                        : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300'
+                    }`}
+                  >
+                    <span
+                      className={`flex h-3.5 w-3.5 items-center justify-center rounded-full border ${
+                        newType === 'code' ? 'border-indigo-500' : 'border-slate-300'
+                      }`}
+                    >
+                      {newType === 'code' && <span className="h-1.5 w-1.5 rounded-full bg-indigo-500" />}
+                    </span>
+                    Code
+                    <span className="ml-auto">⌨️</span>
+                  </button>
+                </div>
+                <p className="mt-2 text-xs leading-relaxed text-slate-400">
+                  Code documents support syntax highlighting. Pick a language below once selected.
+                </p>
+              </div>
+
+              {newType === 'code' && (
+                <div>
+                  <label className="mb-2 block text-sm font-semibold text-slate-900">Language</label>
+                  <div className="relative">
+                    <select
+                      value={newLanguage}
+                      onChange={(e) => setNewLanguage(e.target.value)}
+                      className="w-full appearance-none rounded-lg border border-slate-300 bg-white px-3.5 py-2.5 text-sm font-medium text-slate-900 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+                    >
+                      <option value="javascript">JavaScript</option>
+                      <option value="typescript">TypeScript</option>
+                      <option value="python">Python</option>
+                    </select>
+                    <span className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400">
+                      ▾
+                    </span>
+                  </div>
+                </div>
+              )}
+
+              {error && (
+                <div className="rounded-lg bg-rose-50 px-3 py-2 text-sm text-rose-600 ring-1 ring-rose-100">
+                  {error}
+                </div>
+              )}
+
+              <div className="flex justify-end gap-2 pt-1">
+                <button
+                  type="button"
+                  onClick={() => setIsCreateModalOpen(false)}
+                  className="rounded-lg border border-slate-200 px-4 py-2.5 text-sm font-medium text-slate-600 transition hover:bg-slate-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isCreating || !newTitle.trim()}
+                  className="flex items-center gap-2 rounded-lg bg-gradient-to-r from-indigo-600 to-blue-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:from-indigo-500 hover:to-blue-500 disabled:opacity-40"
+                >
+                  {isCreating ? (
+                    <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+                  ) : (
+                    <span className="text-base leading-none">+</span>
+                  )}
+                  {isCreating ? 'Creating…' : 'Create document'}
                 </button>
               </div>
             </form>
